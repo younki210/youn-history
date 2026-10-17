@@ -1,113 +1,117 @@
-// 선생님이 문제를 수정하는 공간입니다.
-const quizData = [
+// 💡 여기에 퀴즈 문제를 추가하거나 수정하세요!
+const questions = [
     {
-        question: "세계 4대 문명의 발생지가 아닌 곳은?",
-        options: ["메소포타미아", "이집트", "로마", "황하"],
-        correctAnswer: "로마"
+        question: "인류 최초로 문자가 발명되고 도시 국가가 형성된 '메소포타미아 문명'이 발생한 강 유역은?",
+        answers: [
+            { text: "나일 강", correct: false },
+            { text: "인더스 강", correct: false },
+            { text: "티그리스 강, 유프라테스 강", correct: true },
+            { text: "황허 강, 창장 강", correct: false }
+        ]
     },
     {
-        question: "고대 그리스에서 민주정치가 가장 발달했던 폴리스는?",
-        options: ["스파르타", "아테네", "테베", "코린토스"],
-        correctAnswer: "아테네"
+        question: "고대 아테네에서 독재자가 될 위험이 있는 사람의 이름을 도자기 파편에 적어 추방했던 제도는?",
+        answers: [
+            { text: "호민관 제도", correct: false },
+            { text: "도편 추방제", correct: true },
+            { text: "카스트 제도", correct: false },
+            { text: "봉건제", correct: false }
+        ]
     },
     {
-        question: "로마가 지중해 세계를 통일하는 데 결정적인 계기가 된 전쟁은?",
-        options: ["포에니 전쟁", "펠로폰네소스 전쟁", "페르시아 전쟁", "트로이 전쟁"],
-        correctAnswer: "포에니 전쟁"
+        question: "고대 로마에서 귀족에 맞서 평민의 권리를 보호하기 위해 처음 설치된 관직은?",
+        answers: [
+            { text: "집정관", correct: false },
+            { text: "원로원", correct: false },
+            { text: "황제", correct: false },
+            { text: "호민관", correct: true }
+        ]
     }
 ];
+
+const questionElement = document.getElementById("question");
+const answerButtons = document.getElementById("answer-buttons");
+const nextButton = document.getElementById("next-btn");
 
 let currentQuestionIndex = 0;
 let score = 0;
 
-// HTML 요소들 가져오기
-const startScreen = document.getElementById('start-screen');
-const quizScreen = document.getElementById('quiz-screen');
-const resultScreen = document.getElementById('result-screen');
-const questionText = document.getElementById('question-text');
-const optionsContainer = document.getElementById('options-container');
-const questionCount = document.getElementById('question-count');
-const scoreDisplay = document.getElementById('score-display');
-const nextBtn = document.getElementById('next-btn');
-const finalScore = document.getElementById('final-score');
-const feedbackMsg = document.getElementById('feedback-msg');
-
-// 버튼 이벤트 연결
-document.getElementById('start-btn').addEventListener('click', startQuiz);
-document.getElementById('restart-btn').addEventListener('click', startQuiz);
-nextBtn.addEventListener('click', () => {
-    currentQuestionIndex++;
-    if (currentQuestionIndex < quizData.length) {
-        loadQuestion();
-    } else {
-        showResult();
-    }
-});
-
 function startQuiz() {
     currentQuestionIndex = 0;
     score = 0;
-    scoreDisplay.innerText = `점수: ${score}`;
-    startScreen.classList.remove('active');
-    resultScreen.classList.remove('active');
-    quizScreen.classList.add('active');
-    loadQuestion();
+    nextButton.innerHTML = "다음 문제";
+    showQuestion();
 }
 
-function loadQuestion() {
-    nextBtn.classList.add('hide');
-    optionsContainer.innerHTML = ''; // 이전 선택지 초기화
+function showQuestion() {
+    resetState();
+    let currentQuestion = questions[currentQuestionIndex];
+    let questionNo = currentQuestionIndex + 1;
+    questionElement.innerHTML = questionNo + ". " + currentQuestion.question;
+
+    currentQuestion.answers.forEach(answer => {
+        const button = document.createElement("button");
+        button.innerHTML = answer.text;
+        button.classList.add("btn");
+        answerButtons.appendChild(button);
+        if (answer.correct) {
+            button.dataset.correct = answer.correct;
+        }
+        button.addEventListener("click", selectAnswer);
+    });
+}
+
+function resetState() {
+    nextButton.style.display = "none";
+    while (answerButtons.firstChild) {
+        answerButtons.removeChild(answerButtons.firstChild);
+    }
+}
+
+function selectAnswer(e) {
+    const selectedBtn = e.target;
+    const isCorrect = selectedBtn.dataset.correct === "true";
     
-    const currentQuiz = quizData[currentQuestionIndex];
-    questionCount.innerText = `문제 ${currentQuestionIndex + 1} / ${quizData.length}`;
-    questionText.innerText = currentQuiz.question;
-
-    currentQuiz.options.forEach(option => {
-        const button = document.createElement('button');
-        button.innerText = option;
-        button.classList.add('option-btn');
-        button.addEventListener('click', () => selectAnswer(button, option));
-        optionsContainer.appendChild(button);
-    });
-}
-
-function selectAnswer(selectedButton, selectedOption) {
-    // 모든 버튼 비활성화 (중복 선택 방지)
-    const buttons = optionsContainer.querySelectorAll('.option-btn');
-    buttons.forEach(btn => {
-        btn.disabled = true;
-        btn.style.cursor = 'not-allowed';
-    });
-
-    const correctAnswer = quizData[currentQuestionIndex].correctAnswer;
-
-    if (selectedOption === correctAnswer) {
-        selectedButton.classList.add('correct');
-        score += 10;
-        scoreDisplay.innerText = `점수: ${score}`;
+    if (isCorrect) {
+        selectedBtn.classList.add("correct");
+        score++;
     } else {
-        selectedButton.classList.add('wrong');
-        // 정답을 보여주기
-        buttons.forEach(btn => {
-            if (btn.innerText === correctAnswer) {
-                btn.classList.add('correct');
-            }
-        });
+        selectedBtn.classList.add("incorrect");
     }
-
-    nextBtn.classList.remove('hide'); // 다음 문제 버튼 표시
+    
+    // 정답을 보여주고 모든 버튼 비활성화
+    Array.from(answerButtons.children).forEach(button => {
+        if (button.dataset.correct === "true") {
+            button.classList.add("correct");
+        }
+        button.disabled = true;
+    });
+    nextButton.style.display = "block";
 }
 
-function showResult() {
-    quizScreen.classList.remove('active');
-    resultScreen.classList.add('active');
-    finalScore.innerText = `총점: ${score}점`;
+function showScore() {
+    resetState();
+    questionElement.innerHTML = `수고하셨습니다! 총 ${questions.length}문제 중 ${score}문제를 맞혔습니다. 🎉`;
+    nextButton.innerHTML = "다시 풀기";
+    nextButton.style.display = "block";
+}
 
-    if (score === quizData.length * 10) {
-        feedbackMsg.innerText = "완벽해요! 오늘 수업 준비가 끝났네요! 🌟";
-    } else if (score > 0) {
-        feedbackMsg.innerText = "잘했어요! 헷갈린 부분은 오늘 수업에서 알아봐요! 👍";
+function handleNextButton() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+        showQuestion();
     } else {
-        feedbackMsg.innerText = "오늘 수업을 열심히 들으면 다음엔 다 맞출 수 있어요! 💪";
+        showScore();
     }
 }
+
+nextButton.addEventListener("click", () => {
+    if (currentQuestionIndex < questions.length) {
+        handleNextButton();
+    } else {
+        startQuiz();
+    }
+});
+
+// 퀴즈 시작
+startQuiz();
